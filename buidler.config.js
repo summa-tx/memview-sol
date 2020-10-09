@@ -5,6 +5,6 @@ module.exports = {
   networks: {
     coverage: {
       url: 'http://localhost:8555'
-    }
+    },
   },
-}
+};
