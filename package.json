@@ -1,0 +1,30 @@
+{
+  "name": "@summa-tx/memview.sol",
+  "version": "1.0.0",
+  "description": "Raw memory access in solidity",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:summa-tx/memview.sol.git"
+  },
+  "scripts": {
+    "test": "npx buidler test",
+    "test:coverage": "npx buidler coverage",
+    "lint": "solium -d contracts/ && eslint ./test",
+    "lint:fix": "solium --fix -d contracts/ && eslint --fix ./test"
+  },
+  "author": "James Prestwich <james@summa.one>",
+  "license": "MIT OR Apache-2.0",
+  "devDependencies": {
+    "@nomiclabs/buidler": "^1.4.7",
+    "@nomiclabs/buidler-ethers": "^2.0.2",
+    "chai": "^4.2.0",
+    "eslint": "^7.10.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "ethers": "^5.0.17",
+    "solidity-coverage": "^0.7.11",
+    "solidity-docgen": "^0.5.7",
+    "solium": "^1.2.5"
+  }
+}
