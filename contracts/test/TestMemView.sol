@@ -1,4 +1,5 @@
-pragma solidity ^0.5.10;
+// SPDX-License-Identifier: MIT OR Apache-2.0
+pragma solidity >=0.5.10;
 
 import {TypedMemView} from "../TypedMemView.sol";
 
