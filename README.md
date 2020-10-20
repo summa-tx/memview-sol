@@ -9,6 +9,8 @@ This library is particularly useful for writing solidity parsers. It is
 currently used in [bitcoin-spv](https://github.com/summa-tx/bitcoin-spv) to 
 parse and manipulate Bitcoin data structures.
 
+`npm i @summa-tx/memview-sol`
+
 ### Why does this exist?
 
 The Solidity `bytes memory` type has a few weaknesses. 
