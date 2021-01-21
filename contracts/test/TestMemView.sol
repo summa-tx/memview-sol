@@ -9,8 +9,8 @@ contract TestMemView {
     event DEBUG(bytes29 indexed a, bytes29 indexed b);
 
     function sameBody() public pure {
-        /// 38 bytes
-        /// Same body, different locations
+        // 38 bytes
+        // Same body, different locations
         bytes memory one = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
         bytes memory two = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
@@ -38,7 +38,7 @@ contract TestMemView {
         require(v1.loc() != v2.loc(), "1 & 2 ought not be at same loc");
         require(v1.len() == v2.len(), "1 & 2 ought be the same len");
 
-        /// A second TypedMemView.ref to two, with a different type
+        // A second TypedMemView.ref to two, with a different type
         bytes29 v3 = TypedMemView.ref(two, 1);
 
         require(v3.typeOf() == 1, "3 ought to be type 1");
@@ -60,7 +60,7 @@ contract TestMemView {
     }
 
     function differentBody() public pure {
-        /// 16 bytes with some identical segments
+        // 16 bytes with some identical segments
         bytes memory one = hex"abcdffff1111ffffffffffffffffffff";
         bytes memory two = hex"ffffabcdffff1111ffffffffffffffff";
 

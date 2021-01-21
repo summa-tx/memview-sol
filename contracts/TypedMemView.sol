@@ -70,7 +70,7 @@ library TypedMemView {
     uint8 constant TWELVE_BYTES = 96;
 
     // Returns the encoded hex charcter that represents the lower 4 bits of the argument.
-    function nibbleHex(uint8 _b) internal pure returns (uint8) {
+    function nibbleHex(uint8 _b) internal pure returns (uint8 _) {
         // This can probably be done more efficiently, but it's only in error
         // paths, so we don't really care :)
         uint8 _nibble = _b | 0xf0; // set top 4, keep bottom 4
