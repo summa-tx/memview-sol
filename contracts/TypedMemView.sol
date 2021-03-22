@@ -69,8 +69,12 @@ library TypedMemView {
     uint256 constant LOW_12_MASK = 0xffffffffffffffffffffffff;
     uint8 constant TWELVE_BYTES = 96;
 
-    // Returns the encoded hex charcter that represents the lower 4 bits of the argument.
-    function nibbleHex(uint8 _b) internal pure returns (uint8 _) {
+    /**
+     * @notice      Returns the encoded hex character that represents the lower 4 bits of the argument.
+     * @param _b    The byte
+     * @return      char - The encoded hex character
+     **/
+    function nibbleHex(uint8 _b) internal pure returns (uint8 char) {
         // This can probably be done more efficiently, but it's only in error
         // paths, so we don't really care :)
         uint8 _nibble = _b | 0xf0; // set top 4, keep bottom 4
@@ -92,15 +96,25 @@ library TypedMemView {
         if (_nibble == 0xff) {return 0x66;} // f
     }
 
-    // Returns a uint16 containing the hex-encoded byte
+    /**
+     * @notice      Returns a uint16 containing the hex-encoded byte.
+     * @param _b    The byte
+     * @return      encoded - The hex-encoded byte
+     **/
     function byteHex(uint8 _b) internal pure returns (uint16 encoded) {
         encoded |= nibbleHex(_b >> 4); // top 4 bits
         encoded <<= 8;
         encoded |= nibbleHex(_b); // lower 4 bits
     }
 
-    // Encodes the uint256 to hex. `first` contains the encoded top 16 bytes.
-    // `second` contains the encoded lower 16 bytes.
+    /**
+     * @notice      Encodes the uint256 to hex. `first` contains the encoded top 16 bytes.
+     *              `second` contains the encoded lower 16 bytes.
+     *
+     * @param _b    The 32 bytes as uint256
+     * @return      first - The top 16 bytes
+     * @return      second - The bottom 16 bytes
+     **/
     function encodeHex(uint256 _b) internal pure returns (uint256 first, uint256 second) {
         for (uint8 i = 31; i > 15; i -= 1) {
             uint8 _byte = uint8(_b >> (i * 8));
@@ -120,10 +134,12 @@ library TypedMemView {
         }
     }
 
-    /// @notice          Changes the endianness of a uint256
-    /// @dev             https://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
-    /// @param _b        The unsigned integer to reverse
-    /// @return          v - The reversed value
+    /**
+     * @notice          Changes the endianness of a uint256.
+     * @dev             https://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel
+     * @param _b        The unsigned integer to reverse
+     * @return          v - The reversed value
+     **/
     function reverseUint256(uint256 _b) internal pure returns (uint256 v) {
         v = _b;
 
@@ -143,7 +159,11 @@ library TypedMemView {
         v = (v >> 128) | (v << 128);
     }
 
-    /// Create a mask with the highest `_len` bits set
+    /**
+     * @notice      Create a mask with the highest `_len` bits set.
+     * @param _len  The length
+     * @return      mask - The mask
+     **/
     function leftMask(uint8 _len) private pure returns (uint256 mask) {
         // ugly. redo without assembly?
         assembly {
@@ -155,25 +175,38 @@ library TypedMemView {
         }
     }
 
-    /// Return the null view
+    /**
+     * @notice      Return the null view.
+     * @return      bytes29 - The null view
+     **/
     function nullView() internal pure returns (bytes29) {
         return NULL;
     }
 
-    /// Check if the view is null
+    /**
+     * @notice      Check if the view is null.
+     * @return      bool - True if the view is null
+     **/
     function isNull(bytes29 memView) internal pure returns (bool) {
         return memView == NULL;
     }
 
-    /// Check if the view is not null
+    /**
+     * @notice      Check if the view is not null.
+     * @return      bool - True if the view is not null
+     **/
     function notNull(bytes29 memView) internal pure returns (bool) {
         return !isNull(memView);
     }
 
-    /// Check if the view is of a valid type and points to a valid location in
-    /// memory. We perform this check by examining solidity's unallocated
-    /// memory pointer and ensuring that the view's upper bound is less than
-    /// that.
+    /**
+     * @notice          Check if the view is of a valid type and points to a valid location
+     *                  in memory.
+     * @dev             We perform this check by examining solidity's unallocated memory
+     *                  pointer and ensuring that the view's upper bound is less than that.
+     * @param memView   The view
+     * @return          ret - True if the view is valid
+     **/
     function isValid(bytes29 memView) internal pure returns (bool ret) {
         if (typeOf(memView) == 0xffffffffff) {return false;}
         uint256 _end = end(memView);
@@ -183,20 +216,34 @@ library TypedMemView {
         }
     }
 
-    /// Require that a typed memory view be valid.
-    /// Returns the view for easy chaining
+    /**
+     * @notice          Require that a typed memory view be valid.
+     * @dev             Returns the view for easy chaining.
+     * @param memView   The view
+     * @return          bytes29 - The validated view
+     **/
     function assertValid(bytes29 memView) internal pure returns (bytes29) {
         require(isValid(memView), "Validity assertion failed");
         return memView;
     }
 
-    /// Return true if the memview is of the expected type. Otherwise false.
+    /**
+     * @notice          Return true if the memview is of the expected type. Otherwise false.
+     * @param memView   The view
+     * @param _expected The expected type
+     * @return          bool - True if the memview is of the expected type
+     **/
     function isType(bytes29 memView, uint40 _expected) internal pure returns (bool) {
         return typeOf(memView) == _expected;
     }
 
-    /// Require that a typed memory view has a specific type.
-    /// Returns the view for easy chaining
+    /**
+     * @notice          Require that a typed memory view has a specific type.
+     * @dev             Returns the view for easy chaining.
+     * @param memView   The view
+     * @param _expected The expected type
+     * @return          bytes29 - The view with validated type
+     **/
     function assertType(bytes29 memView, uint40 _expected) internal pure returns (bytes29) {
         if (!isType(memView, _expected)) {
             (, uint256 g) = encodeHex(uint256(typeOf(memView)));
@@ -214,7 +261,12 @@ library TypedMemView {
         return memView;
     }
 
-    /// Return an identical view with a different type
+    /**
+     * @notice          Return an identical view with a different type.
+     * @param memView   The view
+     * @param _newType  The new type
+     * @return          newView - The new view with the specified type
+     **/
     function castTo(bytes29 memView, uint40 _newType) internal pure returns (bytes29 newView) {
         // then | in the new type
         assembly {
@@ -225,8 +277,16 @@ library TypedMemView {
         }
     }
 
-    /// Unsafe raw pointer construction. This should generally not be called
-    /// directly. Prefer `ref` wherever possible.
+    /**
+     * @notice          Unsafe raw pointer construction. This should generally not be called
+     *                  directly. Prefer `ref` wherever possible.
+     * @dev             Unsafe raw pointer construction. This should generally not be called
+     *                  directly. Prefer `ref` wherever possible.
+     * @param _type     The type
+     * @param _loc      The memory address
+     * @param _len      The length
+     * @return          newView - The new view with the specified type, location and length
+     **/
     function buildUnchecked(uint256 _type, uint256 _loc, uint256 _len) private pure returns (bytes29 newView) {
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
@@ -236,8 +296,16 @@ library TypedMemView {
         }
     }
 
-    /// Instantiate a new memory view. This should generally not be called
-    /// directly. Prefer `ref` wherever possible.
+    /**
+     * @notice          Instantiate a new memory view. This should generally not be called
+     *                  directly. Prefer `ref` wherever possible.
+     * @dev             Instantiate a new memory view. This should generally not be called
+     *                  directly. Prefer `ref` wherever possible.
+     * @param _type     The type
+     * @param _loc      The memory address
+     * @param _len      The length
+     * @return          newView - The new view with the specified type, location and length
+     **/
     function build(uint256 _type, uint256 _loc, uint256 _len) internal pure returns (bytes29 newView) {
         uint256 _end = _loc.add(_len);
         assembly {
@@ -252,10 +320,14 @@ library TypedMemView {
         newView = buildUnchecked(_type, _loc, _len);
     }
 
-    /// Instantiate a memory view from a byte array.
-    ///
-    /// Note that due to Solidity memory representation, it is not possible to
-    /// implement a deref, as the `bytes` type stores its len in memory.
+    /**
+     * @notice          Instantiate a memory view from a byte array.
+     * @dev             Note that due to Solidity memory representation, it is not possible to
+     *                  implement a deref, as the `bytes` type stores its len in memory.
+     * @param arr       The byte array
+     * @param newType   The type
+     * @return          bytes29 - The memory view
+     **/
     function ref(bytes memory arr, uint40 newType) internal pure returns (bytes29) {
         uint256 _len = arr.length;
 
@@ -268,7 +340,11 @@ library TypedMemView {
         return build(newType, _loc, _len);
     }
 
-    /// Return the associated type information
+    /**
+     * @notice          Return the associated type information.
+     * @param memView   The memory view
+     * @return          _type - The type associated with the view
+     **/
     function typeOf(bytes29 memView) internal pure returns (uint40 _type) {
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
@@ -277,12 +353,21 @@ library TypedMemView {
         }
     }
 
-    /// Optimized type comparison. Checks that the 5-byte type flag is equal.
+    /**
+     * @notice          Optimized type comparison. Checks that the 5-byte type flag is equal.
+     * @param left      The first view
+     * @param right     The second view
+     * @return          bool - True if the 5-byte type flag is equal
+     **/
     function sameType(bytes29 left, bytes29 right) internal pure returns (bool) {
         return (left ^ right) >> (2 * TWELVE_BYTES) == 0;
     }
 
-    /// Return the memory address of the underlying bytes
+    /**
+     * @notice          Return the memory address of the underlying bytes.
+     * @param memView   The view
+     * @return          _loc - The memory address
+     **/
     function loc(bytes29 memView) internal pure returns (uint96 _loc) {
         uint256 _mask = LOW_12_MASK;  // assembly can't use globals
         assembly {
@@ -292,17 +377,29 @@ library TypedMemView {
         }
     }
 
-    /// The number of memory words this memory view occupies, rounded up
+    /**
+     * @notice          The number of memory words this memory view occupies, rounded up.
+     * @param memView   The view
+     * @return          uint256 - The number of memory words
+     **/
     function words(bytes29 memView) internal pure returns (uint256) {
         return uint256(len(memView)).add(32) / 32;
     }
 
-    /// The in-memory footprint of a fresh copy of the view
+    /**
+     * @notice          The in-memory footprint of a fresh copy of the view.
+     * @param memView   The view
+     * @return          uint256 - The in-memory footprint of a fresh copy of the view.
+     **/
     function footprint(bytes29 memView) internal pure returns (uint256) {
         return words(memView) * 32;
     }
 
-    /// The number of bytes of the view
+    /**
+     * @notice          The number of bytes of the view.
+     * @param memView   The view
+     * @return          _len - The length of the view
+     **/
     function len(bytes29 memView) internal pure returns (uint96 _len) {
         uint256 _mask = LOW_12_MASK;  // assembly can't use globals
         assembly {
@@ -311,12 +408,23 @@ library TypedMemView {
         }
     }
 
-    /// Returns the endpoint of the `memView`
+    /**
+     * @notice          Returns the endpoint of `memView`.
+     * @param memView   The view
+     * @return          uint256 - The endpoint of `memView`
+     **/
     function end(bytes29 memView) internal pure returns (uint256) {
         return loc(memView) + len(memView);
     }
 
-    /// Safe slicing without memory modification.
+    /**
+     * @notice          Safe slicing without memory modification.
+     * @param memView   The view
+     * @param _index    The start index
+     * @param _len      The length
+     * @param newType   The new type
+     * @return          bytes29 - The new view
+     **/
     function slice(bytes29 memView, uint256 _index, uint256 _len, uint40 newType) internal pure returns (bytes29) {
         uint256 _loc = loc(memView);
 
@@ -329,17 +437,36 @@ library TypedMemView {
         return build(newType, _loc, _len);
     }
 
-    /// Shortcut to `slice`. Gets a view representing the first `_len` bytes
+    /**
+     * @notice          Shortcut to `slice`. Gets a view representing the first `_len` bytes.
+     * @param memView   The view
+     * @param _len      The length
+     * @param newType   The new type
+     * @return          bytes29 - The new view
+     **/
     function prefix(bytes29 memView, uint256 _len, uint40 newType) internal pure returns (bytes29) {
         return slice(memView, 0, _len, newType);
     }
 
-    /// Shortcut to `slice`. Gets a view representing the last `_len` byte
+    /**
+     * @notice          Shortcut to `slice`. Gets a view representing the last `_len` byte.
+     * @param memView   The view
+     * @param _len      The length
+     * @param newType   The new type
+     * @return          bytes29 - The new view
+     **/
     function postfix(bytes29 memView, uint256 _len, uint40 newType) internal pure returns (bytes29) {
         return slice(memView, uint256(len(memView)).sub(_len), _len, newType);
     }
 
-    /// Construct an error message for an indexing overrun.
+    /**
+     * @notice          Construct an error message for an indexing overrun.
+     * @param _loc      The memory address
+     * @param _len      The length
+     * @param _index    The index
+     * @param _slice    The slice where the overrun occurred
+     * @return          err - The err
+     **/
     function indexErrOverrun(
         uint256 _loc,
         uint256 _len,
@@ -365,11 +492,16 @@ library TypedMemView {
         );
     }
 
-    /// Load up to 32 bytes from the view onto the stack.
-    ///
-    /// Returns a bytes32 with only the `_bytes` highest bytes set.
-    /// This can be immediately cast to a smaller fixed-length byte array.
-    /// To automatically cast to an integer, use `indexUint` or `indexInt`.
+    /**
+     * @notice          Load up to 32 bytes from the view onto the stack.
+     * @dev             Returns a bytes32 with only the `_bytes` highest bytes set.
+     *                  This can be immediately cast to a smaller fixed-length byte array.
+     *                  To automatically cast to an integer, use `indexUint` or `indexInt`.
+     * @param memView   The view
+     * @param _index    The index
+     * @param _bytes    The bytes
+     * @return          result - The 32 byte result
+     **/
     function index(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (bytes32 result) {
         if (_bytes == 0) {return bytes32(0);}
         if (_index.add(_bytes) > len(memView)) {
@@ -386,29 +518,57 @@ library TypedMemView {
         }
     }
 
-    /// Parse an unsigned integer from the view at `_index`. Requires that the
-    /// view have >= `_bytes` bytes following that index.
+    /**
+     * @notice          Parse an unsigned integer from the view at `_index`.
+     * @dev             Requires that the view have >= `_bytes` bytes following that index.
+     * @param memView   The view
+     * @param _index    The index
+     * @param _bytes    The bytes
+     * @return          result - The unsigned integer
+     **/
     function indexUint(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (uint256 result) {
         return uint256(index(memView, _index, _bytes)) >> ((32 - _bytes) * 8);
     }
 
-    /// Parse an unsigned integer from LE bytes.
+    /**
+     * @notice          Parse an unsigned integer from LE bytes.
+     * @param memView   The view
+     * @param _index    The index
+     * @param _bytes    The bytes
+     * @return          result - The unsigned integer
+     **/
     function indexLEUint(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (uint256 result) {
         return reverseUint256(uint256(index(memView, _index, _bytes)));
     }
 
-    /// Parse a signed integer from the view at `_index`. Requires that the
-    /// view have >= `_bytes` bytes following that index.
+    /**
+     * @notice          Parse a signed integer from the view at `_index`.
+     * @dev             Requires that the view have >= `_bytes` bytes following that index.
+     * @param memView   The view
+     * @param _index    The index
+     * @param _bytes    The bytes
+     * @return          result - The signed integer
+     **/
     function indexInt(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (int256 result) {
         return int256(index(memView, _index, _bytes)) >> ((32 - _bytes) * 8);
     }
 
-    /// Parse an address from the view at `_index`. Requires that the view have >= 20 bytes following that index.
+    /**
+     * @notice          Parse an address from the view at `_index`. Requires that the view have >= 20 bytes
+     *                  following that index.
+     * @param memView   The view
+     * @param _index    The index
+     * @return          address - The address
+     **/
     function indexAddress(bytes29 memView, uint256 _index) internal pure returns (address) {
         return address(uint160(indexInt(memView, _index, 20)));
     }
 
-    /// Return the keccak256 hash of the underlying memory
+    /**
+     * @notice          Return the keccak256 hash of the underlying memory
+     * @param memView   The view
+     * @return          digest - The keccak256 hash of the underlying memory
+     **/
     function keccak(bytes29 memView) internal pure returns (bytes32 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
@@ -419,6 +579,12 @@ library TypedMemView {
     }
 
     /// Return the sha2 digest of the underlying memory. We explicitly deallocate memory afterwards
+    /**
+     * @notice          Return the sha2 digest of the underlying memory.
+     * @dev             We explicitly deallocate memory afterwards.
+     * @param memView   The view
+     * @return          digest - The sha2 hash of the underlying memory
+     **/
     function sha2(bytes29 memView) internal view returns (bytes32 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
@@ -430,9 +596,11 @@ library TypedMemView {
         }
     }
 
-    /// @notice          Implements bitcoin's hash160 (rmd160(sha2()))
-    /// @param memView   The pre-image
-    /// @return          digest - the Digest
+    /**
+     * @notice          Implements bitcoin's hash160 (rmd160(sha2()))
+     * @param memView   The pre-image
+     * @return          digest - the Digest
+     **/
     function hash160(bytes29 memView) internal view returns (bytes20 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
@@ -445,9 +613,11 @@ library TypedMemView {
         }
     }
 
-    /// @notice          Implements bitcoin's hash256 (double sha2)
-    /// @param memView   A view of the preimage
-    /// @return          digest - the Digest
+    /**
+     * @notice          Implements bitcoin's hash256 (double sha2)
+     * @param memView   A view of the preimage
+     * @return          digest - the Digest
+     **/
     function hash256(bytes29 memView) internal view returns (bytes32 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
