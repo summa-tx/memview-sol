@@ -630,34 +630,59 @@ library TypedMemView {
         }
     }
 
-    /// Return true if the underlying memory is equal. Else false.
+    /**
+     * @notice          Return true if the underlying memory is equal. Else false.
+     * @param left      The first view
+     * @param right     The second view
+     * @return          bool - True if the underlying memory is equal
+     **/
     function untypedEqual(bytes29 left, bytes29 right) internal pure returns (bool) {
         return (loc(left) == loc(right) && len(left) == len(right)) || keccak(left) == keccak(right);
     }
 
-    /// Return false if the underlying memory is equal. Else true.
+    /**
+     * @notice          Return false if the underlying memory is equal. Else true.
+     * @param left      The first view
+     * @param right     The second view
+     * @return          bool - False if the underlying memory is equal
+     **/
     function untypedNotEqual(bytes29 left, bytes29 right) internal pure returns (bool) {
         return !untypedEqual(left, right);
     }
 
-    /// Typed equality. Shortcuts if the pointers are identical, otherwise
-    /// compares type and digest
+    /**
+     * @notice          Compares type equality.
+     * @dev             Shortcuts if the pointers are identical, otherwise compares type and digest.
+     * @param left      The first view
+     * @param right     The second view
+     * @return          bool - True if the types are the same
+     **/
     function equal(bytes29 left, bytes29 right) internal pure returns (bool) {
         return left == right || (typeOf(left) == typeOf(right) && keccak(left) == keccak(right));
     }
 
-    /// Typed inequality. Shortcuts if the pointers are identical, otherwise
-    /// compares type and digest
+    /**
+     * @notice          Compares type inequality.
+     * @dev             Shortcuts if the pointers are identical, otherwise compares type and digest.
+     * @param left      The first view
+     * @param right     The second view
+     * @return          bool - True if the types are not the same
+     **/
     function notEqual(bytes29 left, bytes29 right) internal pure returns (bool) {
         return !equal(left, right);
     }
 
-    /// Copy the view to a location, return an unsafe memory reference
-    ///
-    /// Super Dangerous direct memory access.
-    /// This reference can be overwritten if anything else modifies memory (!!!).
-    /// As such it MUST be consumed IMMEDIATELY.
-    /// This function is private to prevent unsafe usage by callers
+    /**
+     * @notice          Copy the view to a location, return an unsafe memory reference
+     * @dev             Super Dangerous direct memory access.
+     *
+     *                  This reference can be overwritten if anything else modifies memory (!!!).
+     *                  As such it MUST be consumed IMMEDIATELY.
+     *                  This function is private to prevent unsafe usage by callers.
+     * @param memView   The view
+     * @param _newLoc   The new location
+     * @return          written - the unsafe memory reference
+     **/
     function copyTo(bytes29 memView, uint256 _newLoc) private view returns (bytes29 written) {
         require(notNull(memView), "TypedMemView/copyTo - Null pointer deref");
         require(isValid(memView), "TypedMemView/copyTo - Invalid pointer deref");
@@ -681,8 +706,13 @@ library TypedMemView {
         written = buildUnchecked(typeOf(memView), _newLoc, _len);
     }
 
-    /// Copies the referenced memory to a new loc in memory, returning a
-    /// `bytes` pointing to the new memory
+    /**
+     * @notice          Copies the referenced memory to a new loc in memory, returning a `bytes` pointing to
+     *                  the new memory
+     * @dev             Shortcuts if the pointers are identical, otherwise compares type and digest.
+     * @param memView   The view
+     * @return          ret - The view pointing to the new memory
+     **/
     function clone(bytes29 memView) internal view returns (bytes memory ret) {
         uint256 ptr;
         uint256 _len = len(memView);
@@ -699,12 +729,16 @@ library TypedMemView {
         }
     }
 
-    /// Join the views in memory, return an unsafe reference to the memory.
-    ///
-    /// Super Dangerous direct memory access.
-    /// This reference can be overwritten if anything else modifies memory (!!!).
-    /// As such it MUST be consumed IMMEDIATELY.
-    /// This function is private to prevent unsafe usage by callers
+    /**
+     * @notice          Join the views in memory, return an unsafe reference to the memory.
+     * @dev             Super Dangerous direct memory access.
+     *
+     *                  This reference can be overwritten if anything else modifies memory (!!!).
+     *                  As such it MUST be consumed IMMEDIATELY.
+     *                  This function is private to prevent unsafe usage by callers.
+     * @param memViews  The views
+     * @return          unsafeView - The conjoined view pointing to the new memory
+     **/
     function unsafeJoin(bytes29[] memory memViews, uint256 _location) private view returns (bytes29 unsafeView) {
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
@@ -724,7 +758,11 @@ library TypedMemView {
         unsafeView = buildUnchecked(0, _location, _offset);
     }
 
-    /// Produce the keccak256 digest of the concatenated contents of multiple views
+    /**
+     * @notice          Produce the keccak256 digest of the concatenated contents of multiple views.
+     * @param memViews  The views
+     * @return          bytes32 - The keccak256 digest
+     **/
     function joinKeccak(bytes29[] memory memViews) internal view returns (bytes32) {
         uint256 ptr;
         assembly {
@@ -734,7 +772,11 @@ library TypedMemView {
         return keccak(unsafeJoin(memViews, ptr));
     }
 
-    /// Produce the sha256 digest of the concatenated contents of multiple views
+    /**
+     * @notice          Produce the sha256 digest of the concatenated contents of multiple views.
+     * @param memViews  The views
+     * @return          bytes32 - The sha256 digest
+     **/
     function joinSha2(bytes29[] memory memViews) internal view returns (bytes32) {
         uint256 ptr;
         assembly {
@@ -744,7 +786,11 @@ library TypedMemView {
         return sha2(unsafeJoin(memViews, ptr));
     }
 
-    /// copies all views, joins them into a new bytearray
+    /**
+     * @notice          copies all views, joins them into a new bytearray.
+     * @param memViews  The views
+     * @return          ret - The new byte array
+     **/
     function join(bytes29[] memory memViews) internal view returns (bytes memory ret) {
         uint256 ptr;
         assembly {
