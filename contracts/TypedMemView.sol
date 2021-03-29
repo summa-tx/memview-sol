@@ -287,7 +287,7 @@ library TypedMemView {
      * @param _len      The length
      * @return          newView - The new view with the specified type, location and length
      */
-    function buildUnchecked(uint256 _type, uint256 _loc, uint256 _len) private pure returns (bytes29 newView) {
+    function unsafeBuildUnchecked(uint256 _type, uint256 _loc, uint256 _len) private pure returns (bytes29 newView) {
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             newView := shl(96, or(newView, _type)) // insert type
@@ -317,7 +317,7 @@ library TypedMemView {
         if (_end == 0) {
             return NULL;
         }
-        newView = buildUnchecked(_type, _loc, _len);
+        newView = unsafeBuildUnchecked(_type, _loc, _len);
     }
 
     /**
@@ -682,7 +682,7 @@ library TypedMemView {
      * @param _newLoc   The new location
      * @return          written - the unsafe memory reference
      */
-    function copyTo(bytes29 memView, uint256 _newLoc) private view returns (bytes29 written) {
+    function unsafeCopyTo(bytes29 memView, uint256 _newLoc) private view returns (bytes29 written) {
         require(notNull(memView), "TypedMemView/copyTo - Null pointer deref");
         require(isValid(memView), "TypedMemView/copyTo - Invalid pointer deref");
         uint256 _len = len(memView);
@@ -702,7 +702,7 @@ library TypedMemView {
             pop(staticcall(gas(), 4, _oldLoc, _len, _newLoc, _len))
         }
 
-        written = buildUnchecked(typeOf(memView), _newLoc, _len);
+        written = unsafeBuildUnchecked(typeOf(memView), _newLoc, _len);
     }
 
     /**
@@ -720,7 +720,7 @@ library TypedMemView {
             ptr := mload(0x40) // load unused memory pointer
             ret := ptr
         }
-        copyTo(memView, ptr + 0x20);
+        unsafeCopyTo(memView, ptr + 0x20);
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             mstore(0x40, add(add(ptr, _len), 0x20)) // write new unused pointer
@@ -751,10 +751,10 @@ library TypedMemView {
         uint256 _offset = 0;
         for (uint256 i = 0; i < memViews.length; i ++) {
             bytes29 memView = memViews[i];
-            copyTo(memView, _location + _offset);
+            unsafeCopyTo(memView, _location + _offset);
             _offset += len(memView);
         }
-        unsafeView = buildUnchecked(0, _location, _offset);
+        unsafeView = unsafeBuildUnchecked(0, _location, _offset);
     }
 
     /**
