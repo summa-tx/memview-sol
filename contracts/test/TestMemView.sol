@@ -164,25 +164,12 @@ contract TestMemView {
         );
 
         require(
-            v1.indexInt(0, 14) == 0x000102030405060708090a0b0c0d,
-            "index mismatch 14 byte int"
-        );
-
-        require(
             v1.indexAddress(12) == 0x0c0D0E0F101112131415161718191a1B1c1D1E1F,
             "index mismatch address"
         );
 
         require(v1.slice(0, 76, 1).equal(v1), "full slice not equal");
         require(v1.slice(0, 77, 1).isNull(), "Non-null on slice overrun");
-
-        bytes memory six = hex"80ff";
-        bytes29 v6 = TypedMemView.ref(six, 2);
-
-        require(
-            v6.indexInt(0, 2) == -32513,
-            "indexInt mismatch 0x80ff"
-        );
     }
 
     function typeError() public pure {
