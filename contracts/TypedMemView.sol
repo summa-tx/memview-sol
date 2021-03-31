@@ -496,7 +496,7 @@ library TypedMemView {
      * @notice          Load up to 32 bytes from the view onto the stack.
      * @dev             Returns a bytes32 with only the `_bytes` highest bytes set.
      *                  This can be immediately cast to a smaller fixed-length byte array.
-     *                  To automatically cast to an integer, use `indexUint` or `indexInt`.
+     *                  To automatically cast to an integer, use `indexUint`.
      * @param memView   The view
      * @param _index    The index
      * @param _bytes    The bytes
