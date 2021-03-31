@@ -542,18 +542,6 @@ library TypedMemView {
     }
 
     /**
-     * @notice          Parse a signed integer from the view at `_index`.
-     * @dev             Requires that the view have >= `_bytes` bytes following that index.
-     * @param memView   The view
-     * @param _index    The index
-     * @param _bytes    The bytes
-     * @return          result - The signed integer
-     */
-    function indexInt(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (int256 result) {
-        return int256(index(memView, _index, _bytes)) >> ((32 - _bytes) * 8);
-    }
-
-    /**
      * @notice          Parse an address from the view at `_index`. Requires that the view have >= 20 bytes
      *                  following that index.
      * @param memView   The view
@@ -561,7 +549,7 @@ library TypedMemView {
      * @return          address - The address
      */
     function indexAddress(bytes29 memView, uint256 _index) internal pure returns (address) {
-        return address(uint160(indexInt(memView, _index, 20)));
+        return address(uint160(indexUint(memView, _index, 20)));
     }
 
     /**
