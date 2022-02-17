@@ -160,16 +160,16 @@ library TypedMemView {
     }
 
     /**
-     * @notice      Create a mask with the highest `_len` bits set.
-     * @param _len  The length
-     * @return      mask - The mask
+     * @notice             Create a mask with the highest `_len` bits set.
+     * @param _highestBit  The highest bit
+     * @return             mask - The mask
      */
-    function leftMask(uint8 _len) private pure returns (uint256 mask) {
+    function leftMask(uint8 _highestBit) private pure returns (uint256 mask) {
         // ugly. redo without assembly?
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             mask := sar(
-                sub(_len, 1),
+                _highestBit,
                 0x8000000000000000000000000000000000000000000000000000000000000000
             )
         }
@@ -509,9 +509,9 @@ library TypedMemView {
         }
         require(_bytes <= 32, "TypedMemView/index - Attempted to index more than 32 bytes");
 
-        uint8 bitLength = _bytes * 8;
+        uint8 highestBit = _bytes * 7 - 1 + _bytes;
         uint256 _loc = loc(memView);
-        uint256 _mask = leftMask(bitLength);
+        uint256 _mask = leftMask(highestBit);
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             result := and(mload(add(_loc, _index)), _mask)
