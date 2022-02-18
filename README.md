@@ -11,6 +11,8 @@ parse and manipulate Bitcoin data structures.
 
 `npm i @summa-tx/memview-sol`
 
+> This library supports solidity <0.8 version.
+
 ### Why does this exist?
 
 The Solidity `bytes memory` type has a few weaknesses.
