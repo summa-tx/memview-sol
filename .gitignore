@@ -3,4 +3,5 @@ artifacts/
 cache/
 coverage/
 coverage.json
+out/
 

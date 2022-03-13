@@ -3,12 +3,20 @@ pragma solidity >=0.5.10;
 
 import {TypedMemView} from "../TypedMemView.sol";
 
-contract TestMemView {
+import "ds-test/test.sol";
+
+interface CheatCodes {
+  function expectRevert(bytes calldata) external;
+}
+
+contract TestMemView is DSTest {
     using TypedMemView for bytes29;
+
+    CheatCodes cheats = CheatCodes(HEVM_ADDRESS);
 
     event DEBUG(bytes29 indexed a, bytes29 indexed b);
 
-    function sameBody() public pure {
+    function testSameBody() public pure {
         // 38 bytes
         // Same body, different locations
         bytes memory one = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
@@ -59,7 +67,7 @@ contract TestMemView {
         require(v3.len() == v2.len(), "2 & 3 ought be the same len");
     }
 
-    function differentBody() public pure {
+    function testDifferentBody() public pure {
         // 16 bytes with some identical segments
         bytes memory one = hex"abcdffff1111ffffffffffffffffffff";
         bytes memory two = hex"ffffabcdffff1111ffffffffffffffff";
@@ -103,7 +111,7 @@ contract TestMemView {
         );
     }
 
-    function slicing() public view {
+    function testSlicing() public view {
         // 76 bytes - 3 words
 
         // solium-disable-next-line max-len
@@ -172,10 +180,17 @@ contract TestMemView {
         require(v1.slice(0, 77, 1).isNull(), "Non-null on slice overrun");
     }
 
-    function typeError() public pure {
+    function testTypeError() public pure {
         bytes memory one = hex"00";
         bytes29 v1 = TypedMemView.ref(one, 33);
         require(v1.isType(33), "isType should pass");
+    }
+
+    function testFailAssertInvalidType() public {
+        bytes memory one = hex"00";
+        bytes29 v1 = TypedMemView.ref(one, 33);
+        // Should revert with:
+        // "Type assertion failed. Got 0x0000000021. Expected 0x000000002c"
         v1.assertType(44);
     }
 }

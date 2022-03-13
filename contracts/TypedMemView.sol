@@ -104,20 +104,26 @@ library TypedMemView {
      * @return      second - The bottom 16 bytes
      */
     function encodeHex(uint256 _b) internal pure returns (uint256 first, uint256 second) {
-        for (uint8 i = 31; i > 15; i -= 1) {
+        for (uint8 i = 31; i > 15;) {
             uint8 _byte = uint8(_b >> (i * 8));
             first |= byteHex(_byte);
             if (i != 16) {
                 first <<= 16;
             }
+            unchecked {
+                i -= 1;
+            }
         }
 
         // abusing underflow here =_=
-        for (uint8 i = 15; i < 255 ; i -= 1) {
+        for (uint8 i = 15; i < 255;) {
             uint8 _byte = uint8(_b >> (i * 8));
             second |= byteHex(_byte);
             if (i != 0) {
                 second <<= 16;
+            }
+            unchecked {
+                i -= 1;
             }
         }
     }
@@ -407,7 +413,9 @@ library TypedMemView {
      * @return          uint256 - The endpoint of `memView`
      */
     function end(bytes29 memView) internal pure returns (uint256) {
-        return loc(memView) + len(memView);
+        unchecked {
+            return loc(memView) + len(memView);
+        }
     }
 
     /**
@@ -502,7 +510,10 @@ library TypedMemView {
         }
         require(_bytes <= 32, "TypedMemView/index - Attempted to index more than 32 bytes");
 
-        uint8 bitLength = _bytes * 8;
+        uint8 bitLength;
+        unchecked {
+            bitLength = _bytes * 8;
+        }
         uint256 _loc = loc(memView);
         uint256 _mask = leftMask(bitLength);
         assembly {
@@ -708,7 +719,9 @@ library TypedMemView {
             ptr := mload(0x40) // load unused memory pointer
             ret := ptr
         }
-        unsafeCopyTo(memView, ptr + 0x20);
+        unchecked {
+            unsafeCopyTo(memView, ptr + 0x20);   
+        }
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             mstore(0x40, add(add(ptr, _len), 0x20)) // write new unused pointer
@@ -740,8 +753,10 @@ library TypedMemView {
         uint256 _offset = 0;
         for (uint256 i = 0; i < memViews.length; i ++) {
             bytes29 memView = memViews[i];
-            unsafeCopyTo(memView, _location + _offset);
-            _offset += len(memView);
+            unchecked {
+                unsafeCopyTo(memView, _location + _offset);
+                _offset += len(memView);
+            }
         }
         unsafeView = unsafeBuildUnchecked(0, _location, _offset);
     }
@@ -786,7 +801,10 @@ library TypedMemView {
             ptr := mload(0x40) // load unused memory pointer
         }
 
-        bytes29 _newView = unsafeJoin(memViews, ptr + 0x20);
+        bytes29 _newView;
+        unchecked {
+            _newView = unsafeJoin(memViews, ptr + 0x20);
+        }
         uint256 _written = len(_newView);
         uint256 _footprint = footprint(_newView);
 
