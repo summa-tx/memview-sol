@@ -1,0 +1,11 @@
+{
+  "extends": "solhint:default",
+  "plugins": [],
+  "rules": {
+    "no-inline-assembly": "error",
+    "quotes": [
+      "error",
+      "double"
+    ]
+  }
+}

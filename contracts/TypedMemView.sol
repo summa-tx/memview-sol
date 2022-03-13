@@ -106,9 +106,7 @@ library TypedMemView {
             if (i != 16) {
                 first <<= 16;
             }
-            unchecked {
-                i -= 1;
-            }
+            unchecked { i -= 1; }
         }
 
         // abusing underflow here =_=
@@ -118,9 +116,7 @@ library TypedMemView {
             if (i != 0) {
                 second <<= 16;
             }
-            unchecked {
-                i -= 1;
-            }
+            unchecked { i -= 1; }
         }
     }
 
@@ -157,7 +153,7 @@ library TypedMemView {
     function leftMask(uint8 _len) private pure returns (uint256 mask) {
         // ugly. redo without assembly?
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             mask := sar(
                 sub(_len, 1),
                 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -201,7 +197,7 @@ library TypedMemView {
         if (typeOf(memView) == 0xffffffffff) {return false;}
         uint256 _end = end(memView);
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ret := not(gt(_end, mload(0x40)))
         }
     }
@@ -262,7 +258,7 @@ library TypedMemView {
         uint256 _typeShift = SHIFT_TO_TYPE;
         uint256 _typeBits = 40;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             // shift off the top 5 bytes
             newView := or(newView, shr(_typeBits, shl(_typeBits, memView)))
             newView := or(newView, shl(_typeShift, _newType))
@@ -303,7 +299,7 @@ library TypedMemView {
     function build(uint256 _type, uint256 _loc, uint256 _len) internal pure returns (bytes29 newView) {
         uint256 _end = _loc + _len;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             if gt(_end, mload(0x40)) {
                 _end := 0
             }
@@ -327,7 +323,7 @@ library TypedMemView {
 
         uint256 _loc;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             _loc := add(arr, 0x20)  // our view is of the data, not the struct
         }
 
@@ -513,7 +509,7 @@ library TypedMemView {
         uint256 _loc = loc(memView);
         uint256 _mask = leftMask(bitLength);
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             result := and(mload(add(_loc, _index)), _mask)
         }
     }
@@ -561,7 +557,7 @@ library TypedMemView {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             digest := keccak256(_loc, _len)
         }
     }
@@ -578,7 +574,7 @@ library TypedMemView {
 
         bool res;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             let ptr := mload(0x40)
             res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2 #1
             digest := mload(ptr)
@@ -596,7 +592,7 @@ library TypedMemView {
         uint256 _len = len(memView);
         bool res;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             let ptr := mload(0x40)
             res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2
             res := and(res, staticcall(gas(), 3, ptr, 0x20, ptr, 0x20)) // rmd160
@@ -615,7 +611,7 @@ library TypedMemView {
         uint256 _len = len(memView);
         bool res;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             let ptr := mload(0x40)
             res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2 #1
             res := and(res, staticcall(gas(), 2, ptr, 0x20, ptr, 0x20)) // sha2 #2
@@ -686,7 +682,7 @@ library TypedMemView {
         uint256 ptr;
         bool res;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40)
             // revert if we're writing in occupied memory
             if gt(ptr, _newLoc) {
@@ -711,7 +707,7 @@ library TypedMemView {
         uint256 ptr;
         uint256 _len = len(memView);
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40) // load unused memory pointer
             ret := ptr
         }
@@ -719,7 +715,7 @@ library TypedMemView {
             unsafeCopyTo(memView, ptr + 0x20);
         }
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             mstore(0x40, add(add(ptr, _len), 0x20)) // write new unused pointer
             mstore(ptr, _len) // write len of new array (in bytes)
         }
@@ -738,7 +734,7 @@ library TypedMemView {
      */
     function unsafeJoin(bytes29[] memory memViews, uint256 _location) private view returns (bytes29 unsafeView) {
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             let ptr := mload(0x40)
             // revert if we're writing in occupied memory
             if gt(ptr, _location) {
@@ -765,7 +761,7 @@ library TypedMemView {
     function joinKeccak(bytes29[] memory memViews) internal view returns (bytes32) {
         uint256 ptr;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40) // load unused memory pointer
         }
         return keccak(unsafeJoin(memViews, ptr));
@@ -779,7 +775,7 @@ library TypedMemView {
     function joinSha2(bytes29[] memory memViews) internal view returns (bytes32) {
         uint256 ptr;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40) // load unused memory pointer
         }
         return sha2(unsafeJoin(memViews, ptr));
@@ -793,7 +789,7 @@ library TypedMemView {
     function join(bytes29[] memory memViews) internal view returns (bytes memory ret) {
         uint256 ptr;
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40) // load unused memory pointer
         }
 
@@ -805,7 +801,7 @@ library TypedMemView {
         uint256 _footprint = footprint(_newView);
 
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
+            // solhint-disable-previous-line no-inline-assembly
             // store the legnth
             mstore(ptr, _written)
             // new pointer is old + 0x20 + the footprint of the body
