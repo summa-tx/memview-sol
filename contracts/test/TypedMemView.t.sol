@@ -76,6 +76,11 @@ contract TestMemView is DSTest {
         bytes29 v2 = TypedMemView.ref(two, 0);
 
         require(
+            v1.slice(0, 0, 0).equal(v2.slice(2, 0, 0)),
+            ""
+        );
+
+        require(
             v1.slice(0, 2, 0).equal(v2.slice(2, 2, 0)),
             "abcd"
         );
@@ -122,6 +127,19 @@ contract TestMemView is DSTest {
             v1.slice(1, 13, 0).keccak() == keccak256(hex"0102030405060708090a0b0c0d"),
             "slice(1, 13) -- keccak mismatch"
         );
+
+        bytes29 emptySlice = v1.slice(0, 0, 0);
+        require(emptySlice.len() == 0, "empty slice non-0 len");
+        bytes memory emptyClone = emptySlice.clone();
+        require(emptyClone.length == 0, "empty slice clone non-0 len");
+
+        uint256 freeMem;
+        uint256 emptyCloneLocation;
+        assembly {
+            freeMem := mload(0x40)
+            emptyCloneLocation := emptyClone
+        }
+        require(freeMem == emptyCloneLocation + 0x20, "freeMem not after empty clone");
 
         bytes29 v2 = v1.slice(76, 0, 255);
         require(v2.keccak() == keccak256(hex""), "v2 slice not null");
@@ -186,7 +204,7 @@ contract TestMemView is DSTest {
         require(v1.isType(33), "isType should pass");
     }
 
-    function testFailAssertInvalidType() public {
+    function testFailAssertInvalidType() public pure {
         bytes memory one = hex"00";
         bytes29 v1 = TypedMemView.ref(one, 33);
         // Should revert with:
