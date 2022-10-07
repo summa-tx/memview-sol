@@ -6,7 +6,7 @@ import {TypedMemView} from "../TypedMemView.sol";
 import "ds-test/test.sol";
 
 interface CheatCodes {
-  function expectRevert(bytes calldata) external;
+    function expectRevert(bytes calldata) external;
 }
 
 contract TestMemView is DSTest {
@@ -75,57 +75,33 @@ contract TestMemView is DSTest {
         bytes29 v1 = TypedMemView.ref(one, 0);
         bytes29 v2 = TypedMemView.ref(two, 0);
 
-        require(
-            v1.slice(0, 0, 0).equal(v2.slice(2, 0, 0)),
-            ""
-        );
+        require(v1.slice(0, 0, 0).equal(v2.slice(2, 0, 0)), "");
 
-        require(
-            v1.slice(0, 2, 0).equal(v2.slice(2, 2, 0)),
-            "abcd"
-        );
+        require(v1.slice(0, 2, 0).equal(v2.slice(2, 2, 0)), "abcd");
 
-        require(
-            v1.slice(0, 4, 0).equal(v2.slice(2, 4, 0)),
-            "abcdffff"
-        );
+        require(v1.slice(0, 4, 0).equal(v2.slice(2, 4, 0)), "abcdffff");
 
-        require(
-            v1.slice(2, 4, 0).equal(v2.slice(4, 4, 0)),
-            "ffff1111"
-        );
+        require(v1.slice(2, 4, 0).equal(v2.slice(4, 4, 0)), "ffff1111");
 
-        require(
-            v1.slice(2, 6, 0).equal(v2.slice(4, 6, 0)),
-            "ffff1111ffff"
-        );
+        require(v1.slice(2, 6, 0).equal(v2.slice(4, 6, 0)), "ffff1111ffff");
 
-        require(
-            v1.postfix(8, 0).equal(v2.postfix(8, 0)),
-            "ffffffffffffffff"
-        );
+        require(v1.postfix(8, 0).equal(v2.postfix(8, 0)), "ffffffffffffffff");
 
-        require(
-            v1.prefix(14, 0).equal(v2.postfix(14, 0)),
-            "abcdffff1111ffffffffffffffff"
-        );
+        require(v1.prefix(14, 0).equal(v2.postfix(14, 0)), "abcdffff1111ffffffffffffffff");
 
-        require(
-            v1.postfix(2, 0).equal(v2.prefix(2, 0)),
-            "ffff"
-        );
+        require(v1.postfix(2, 0).equal(v2.prefix(2, 0)), "ffff");
     }
 
     function testSlicing() public view {
         // 76 bytes - 3 words
 
         // solhint-disable-next-line max-line-length
-        bytes memory one = hex"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b";
+        bytes memory one =
+            hex"000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b";
 
         bytes29 v1 = TypedMemView.ref(one, 1);
         require(
-            v1.slice(1, 13, 0).keccak() == keccak256(hex"0102030405060708090a0b0c0d"),
-            "slice(1, 13) -- keccak mismatch"
+            v1.slice(1, 13, 0).keccak() == keccak256(hex"0102030405060708090a0b0c0d"), "slice(1, 13) -- keccak mismatch"
         );
 
         bytes29 emptySlice = v1.slice(0, 0, 0);
@@ -145,28 +121,15 @@ contract TestMemView is DSTest {
         require(v2.keccak() == keccak256(hex""), "v2 slice not null");
 
         bytes29 v3 = v1.slice(1, 25, 0).slice(13, 12, 0);
-        require(
-            v3.keccak() == keccak256(hex"0e0f10111213141516171819"),
-            "multiple slice hash mismatch"
-        );
-        require(
-            v3.sha2() == sha256(hex"0e0f10111213141516171819"),
-            "multiple slice sha2 mismatch"
-        );
+        require(v3.keccak() == keccak256(hex"0e0f10111213141516171819"), "multiple slice hash mismatch");
+        require(v3.sha2() == sha256(hex"0e0f10111213141516171819"), "multiple slice sha2 mismatch");
+
+        require(keccak256(v3.clone()) == v3.keccak(), "clone slice hash mismatch");
+
+        require(sha256(v3.clone()) == v3.sha2(), "clone slice sha2 mismatch");
 
         require(
-            keccak256(v3.clone()) == v3.keccak(),
-            "clone slice hash mismatch"
-        );
-
-        require(
-            sha256(v3.clone()) == v3.sha2(),
-            "clone slice sha2 mismatch"
-        );
-
-        require(
-            v1.slice(25, 33, 0).slice(19, 14, 0) == v1.slice(20, 43, 0).slice(24, 14, 0),
-            "expected equivalent slices"
+            v1.slice(25, 33, 0).slice(19, 14, 0) == v1.slice(20, 43, 0).slice(24, 14, 0), "expected equivalent slices"
         );
 
         require(
@@ -179,20 +142,11 @@ contract TestMemView is DSTest {
             "index mismatch 14 bytes"
         );
 
-        require(
-            v1.indexUint(0, 14) == 0x000102030405060708090a0b0c0d,
-            "index mismatch 14 byte uint"
-        );
+        require(v1.indexUint(0, 14) == 0x000102030405060708090a0b0c0d, "index mismatch 14 byte uint");
 
-        require(
-            v1.indexLEUint(0, 14) == 0x0d0c0b0a09080706050403020100,
-            "index mismatch 14 byte uint le"
-        );
+        require(v1.indexLEUint(0, 14) == 0x0d0c0b0a09080706050403020100, "index mismatch 14 byte uint le");
 
-        require(
-            v1.indexAddress(12) == 0x0c0D0E0F101112131415161718191a1B1c1D1E1F,
-            "index mismatch address"
-        );
+        require(v1.indexAddress(12) == 0x0c0D0E0F101112131415161718191a1B1c1D1E1F, "index mismatch address");
 
         require(v1.slice(0, 76, 1).equal(v1), "full slice not equal");
         require(v1.slice(0, 77, 1).isNull(), "Non-null on slice overrun");

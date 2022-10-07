@@ -59,7 +59,6 @@ library TypedMemView {
     // - - make sure to explicitly check for this with `notNull` or `assertType`
     // - use `equal` for typed comparisons.
 
-
     // The null view
     bytes29 public constant NULL = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
     // Mask a low uint96
@@ -106,7 +105,9 @@ library TypedMemView {
             if (i != 16) {
                 first <<= 16;
             }
-            unchecked { i -= 1; }
+            unchecked {
+                i -= 1;
+            }
         }
 
         // abusing underflow here =_=
@@ -116,7 +117,9 @@ library TypedMemView {
             if (i != 0) {
                 second <<= 16;
             }
-            unchecked { i -= 1; }
+            unchecked {
+                i -= 1;
+            }
         }
     }
 
@@ -130,17 +133,17 @@ library TypedMemView {
         v = _b;
 
         // swap bytes
-        v = ((v >> 8) & 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF) |
-            ((v & 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF) << 8);
+        v = ((v >> 8) & 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF)
+            | ((v & 0x00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF) << 8);
         // swap 2-byte long pairs
-        v = ((v >> 16) & 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF) |
-            ((v & 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF) << 16);
+        v = ((v >> 16) & 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF)
+            | ((v & 0x0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF0000FFFF) << 16);
         // swap 4-byte long pairs
-        v = ((v >> 32) & 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF) |
-            ((v & 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF) << 32);
+        v = ((v >> 32) & 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF)
+            | ((v & 0x00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF) << 32);
         // swap 8-byte long pairs
-        v = ((v >> 64) & 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF) |
-            ((v & 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF) << 64);
+        v = ((v >> 64) & 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF)
+            | ((v & 0x0000000000000000FFFFFFFFFFFFFFFF0000000000000000FFFFFFFFFFFFFFFF) << 64);
         // swap 16-byte long pairs
         v = (v >> 128) | (v << 128);
     }
@@ -154,10 +157,7 @@ library TypedMemView {
         // ugly. redo without assembly?
         assembly {
             // solhint-disable-previous-line no-inline-assembly
-            mask := sar(
-                sub(_len, 1),
-                0x8000000000000000000000000000000000000000000000000000000000000000
-            )
+            mask := sar(sub(_len, 1), 0x8000000000000000000000000000000000000000000000000000000000000000)
         }
     }
 
@@ -194,7 +194,7 @@ library TypedMemView {
      * @return          ret - True if the view is valid
      */
     function isValid(bytes29 memView) internal pure returns (bool ret) {
-        if (typeOf(memView) == 0xffffffffff) {return false;}
+        if (typeOf(memView) == 0xffffffffff) return false;
         uint256 _end = end(memView);
         assembly {
             // solhint-disable-previous-line no-inline-assembly
@@ -234,14 +234,8 @@ library TypedMemView {
         if (!isType(memView, _expected)) {
             (, uint256 g) = encodeHex(uint256(typeOf(memView)));
             (, uint256 e) = encodeHex(uint256(_expected));
-            string memory err = string(
-                abi.encodePacked(
-                    "Type assertion failed. Got 0x",
-                    uint80(g),
-                    ". Expected 0x",
-                    uint80(e)
-                )
-            );
+            string memory err =
+                string(abi.encodePacked("Type assertion failed. Got 0x", uint80(g), ". Expected 0x", uint80(e)));
             revert(err);
         }
         return memView;
@@ -300,9 +294,7 @@ library TypedMemView {
         uint256 _end = _loc + _len;
         assembly {
             // solhint-disable-previous-line no-inline-assembly
-            if gt(_end, mload(0x40)) {
-                _end := 0
-            }
+            if gt(_end, mload(0x40)) { _end := 0 }
         }
         if (_end == 0) {
             return NULL;
@@ -324,7 +316,7 @@ library TypedMemView {
         uint256 _loc;
         assembly {
             // solhint-disable-previous-line no-inline-assembly
-            _loc := add(arr, 0x20)  // our view is of the data, not the struct
+            _loc := add(arr, 0x20) // our view is of the data, not the struct
         }
 
         return build(newType, _loc, _len);
@@ -460,12 +452,11 @@ library TypedMemView {
      * @param _slice    The slice where the overrun occurred
      * @return          err - The err
      */
-    function indexErrOverrun(
-        uint256 _loc,
-        uint256 _len,
-        uint256 _index,
-        uint256 _slice
-    ) internal pure returns (string memory err) {
+    function indexErrOverrun(uint256 _loc, uint256 _len, uint256 _index, uint256 _slice)
+        internal
+        pure
+        returns (string memory err)
+    {
         (, uint256 a) = encodeHex(_loc);
         (, uint256 b) = encodeHex(_len);
         (, uint256 c) = encodeHex(_index);
@@ -496,7 +487,7 @@ library TypedMemView {
      * @return          result - The 32 byte result
      */
     function index(bytes29 memView, uint256 _index, uint8 _bytes) internal pure returns (bytes32 result) {
-        if (_bytes == 0) {return bytes32(0);}
+        if (_bytes == 0) return bytes32(0);
         if (_index + _bytes > len(memView)) {
             revert(indexErrOverrun(loc(memView), len(memView), _index, uint256(_bytes)));
         }
@@ -685,9 +676,7 @@ library TypedMemView {
             // solhint-disable-previous-line no-inline-assembly
             ptr := mload(0x40)
             // revert if we're writing in occupied memory
-            if gt(ptr, _newLoc) {
-                revert(0x60, 0x20) // empty revert message
-            }
+            if gt(ptr, _newLoc) { revert(0x60, 0x20) } // empty revert message
 
             // use the identity precompile to copy
             res := staticcall(gas(), 4, _oldLoc, _len, _newLoc, _len)
@@ -737,13 +726,11 @@ library TypedMemView {
             // solhint-disable-previous-line no-inline-assembly
             let ptr := mload(0x40)
             // revert if we're writing in occupied memory
-            if gt(ptr, _location) {
-                revert(0x60, 0x20) // empty revert message
-            }
+            if gt(ptr, _location) { revert(0x60, 0x20) } // empty revert message
         }
 
         uint256 _offset = 0;
-        for (uint256 i = 0; i < memViews.length; i ++) {
+        for (uint256 i = 0; i < memViews.length; i++) {
             bytes29 memView = memViews[i];
             unchecked {
                 unsafeCopyTo(memView, _location + _offset);
