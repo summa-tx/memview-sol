@@ -11,6 +11,11 @@ parse and manipulate Bitcoin data structures.
 
 `npm i @summa-tx/memview-sol`
 
+### Using Solidity v0.8?
+
+The [`latest-solidity`](https://github.com/summa-tx/memview-sol/pull/6) branch
+can be installed as a forge dependency!
+
 ### Why does this exist?
 
 The Solidity `bytes memory` type has a few weaknesses.
