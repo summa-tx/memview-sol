@@ -1,6 +1,6 @@
 {
   "name": "@summa-tx/memview-sol",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Raw memory access in solidity",
   "repository": {
     "type": "git",

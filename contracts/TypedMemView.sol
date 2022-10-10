@@ -383,7 +383,7 @@ library TypedMemView {
      * @return          uint256 - The number of memory words
      */
     function words(bytes29 memView) internal pure returns (uint256) {
-        return uint256(len(memView)).add(32) / 32;
+        return uint256(len(memView)).add(31) / 32;
     }
 
     /**
@@ -575,12 +575,15 @@ library TypedMemView {
     function sha2(bytes29 memView) internal view returns (bytes32 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
+
+        bool res;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             let ptr := mload(0x40)
-            pop(staticcall(gas(), 2, _loc, _len, ptr, 0x20)) // sha2 #1
+            res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2 #1
             digest := mload(ptr)
         }
+        require(res, "sha2 OOG");
     }
 
     /**
@@ -591,13 +594,15 @@ library TypedMemView {
     function hash160(bytes29 memView) internal view returns (bytes20 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
+        bool res;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             let ptr := mload(0x40)
-            pop(staticcall(gas(), 2, _loc, _len, ptr, 0x20)) // sha2
-            pop(staticcall(gas(), 3, ptr, 0x20, ptr, 0x20)) // rmd160
+            res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2
+            res := and(res, staticcall(gas(), 3, ptr, 0x20, ptr, 0x20)) // rmd160
             digest := mload(add(ptr, 0xc)) // return value is 0-prefixed.
         }
+        require(res, "hash160 OOG");
     }
 
     /**
@@ -608,13 +613,15 @@ library TypedMemView {
     function hash256(bytes29 memView) internal view returns (bytes32 digest) {
         uint256 _loc = loc(memView);
         uint256 _len = len(memView);
+        bool res;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             let ptr := mload(0x40)
-            pop(staticcall(gas(), 2, _loc, _len, ptr, 0x20)) // sha2 #1
-            pop(staticcall(gas(), 2, ptr, 0x20, ptr, 0x20)) // sha2 #2
+            res := staticcall(gas(), 2, _loc, _len, ptr, 0x20) // sha2 #1
+            res := and(res, staticcall(gas(), 2, ptr, 0x20, ptr, 0x20)) // sha2 #2
             digest := mload(ptr)
         }
+        require(res, "hash256 OOG");
     }
 
     /**
@@ -677,6 +684,7 @@ library TypedMemView {
         uint256 _oldLoc = loc(memView);
 
         uint256 ptr;
+        bool res;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             ptr := mload(0x40)
@@ -687,9 +695,9 @@ library TypedMemView {
 
             // use the identity precompile to copy
             // guaranteed not to fail, so pop the success
-            pop(staticcall(gas(), 4, _oldLoc, _len, _newLoc, _len))
+            res := staticcall(gas(), 4, _oldLoc, _len, _newLoc, _len)
         }
-
+        require(res, "identity OOG");
         written = unsafeBuildUnchecked(typeOf(memView), _newLoc, _len);
     }
 
