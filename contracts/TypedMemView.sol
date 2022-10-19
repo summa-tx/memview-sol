@@ -66,36 +66,24 @@ library TypedMemView {
 
     // The null view
     bytes29 public constant NULL = hex"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    // Mask a low uint96
     uint256 constant LOW_12_MASK = 0xffffffffffffffffffffffff;
-    uint8 constant TWELVE_BYTES = 96;
+    // Shift constants
+    uint8 constant SHIFT_TO_LEN = 24;
+    uint8 constant SHIFT_TO_LOC = 96 + 24;
+    uint8 constant SHIFT_TO_TYPE = 96 + 96 + 24;
+    // For nibble encoding
+    bytes private constant NIBBLE_LOOKUP = "0123456789abcdef";
 
     /**
-     * @notice      Returns the encoded hex character that represents the lower 4 bits of the argument.
-     * @param _b    The byte
-     * @return      char - The encoded hex character
+     * @notice Returns the encoded hex character that represents the lower 4 bits of the argument.
+     * @param _byte The byte
+     * @return _char The encoded hex character
      */
-    function nibbleHex(uint8 _b) internal pure returns (uint8 char) {
-        // This can probably be done more efficiently, but it's only in error
-        // paths, so we don't really care :)
-        uint8 _nibble = _b | 0xf0; // set top 4, keep bottom 4
-        if (_nibble == 0xf0) {return 0x30;} // 0
-        if (_nibble == 0xf1) {return 0x31;} // 1
-        if (_nibble == 0xf2) {return 0x32;} // 2
-        if (_nibble == 0xf3) {return 0x33;} // 3
-        if (_nibble == 0xf4) {return 0x34;} // 4
-        if (_nibble == 0xf5) {return 0x35;} // 5
-        if (_nibble == 0xf6) {return 0x36;} // 6
-        if (_nibble == 0xf7) {return 0x37;} // 7
-        if (_nibble == 0xf8) {return 0x38;} // 8
-        if (_nibble == 0xf9) {return 0x39;} // 9
-        if (_nibble == 0xfa) {return 0x61;} // a
-        if (_nibble == 0xfb) {return 0x62;} // b
-        if (_nibble == 0xfc) {return 0x63;} // c
-        if (_nibble == 0xfd) {return 0x64;} // d
-        if (_nibble == 0xfe) {return 0x65;} // e
-        if (_nibble == 0xff) {return 0x66;} // f
+    function nibbleHex(uint8 _byte) internal pure returns (uint8 _char) {
+        uint8 _nibble = _byte & 0x0f; // keep bottom 4, 0 top 4
+        _char = uint8(NIBBLE_LOOKUP[_nibble]);
     }
-
     /**
      * @notice      Returns a uint16 containing the hex-encoded byte.
      * @param _b    The byte
@@ -269,11 +257,13 @@ library TypedMemView {
      */
     function castTo(bytes29 memView, uint40 _newType) internal pure returns (bytes29 newView) {
         // then | in the new type
+        uint256 _typeShift = SHIFT_TO_TYPE;
+        uint256 _typeBits = 40;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
             // shift off the top 5 bytes
-            newView := or(newView, shr(40, shl(40, memView)))
-            newView := or(newView, shl(216, _newType))
+            newView := or(newView, shr(_typeBits, shl(_typeBits, memView)))
+            newView := or(newView, shl(_typeShift, _newType))
         }
     }
 
@@ -288,11 +278,13 @@ library TypedMemView {
      * @return          newView - The new view with the specified type, location and length
      */
     function unsafeBuildUnchecked(uint256 _type, uint256 _loc, uint256 _len) private pure returns (bytes29 newView) {
+        uint256 _uint96Bits = 96;
+        uint256 _emptyBits = 24;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
-            newView := shl(96, or(newView, _type)) // insert type
-            newView := shl(96, or(newView, _loc))  // insert loc
-            newView := shl(24, or(newView, _len))  // empty bottom 3 bytes
+            newView := shl(_uint96Bits, or(newView, _type)) // insert type
+            newView := shl(_uint96Bits, or(newView, _loc))  // insert loc
+            newView := shl(_emptyBits, or(newView, _len))  // empty bottom 3 bytes
         }
     }
 
@@ -346,10 +338,10 @@ library TypedMemView {
      * @return          _type - The type associated with the view
      */
     function typeOf(bytes29 memView) internal pure returns (uint40 _type) {
+        uint256 _shift = SHIFT_TO_TYPE;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
-            // 216 == 256 - 40
-            _type := shr(216, memView) // shift out lower 24 bytes
+            _type := shr(_shift, memView) // shift out lower 27 bytes
         }
     }
 
@@ -360,7 +352,7 @@ library TypedMemView {
      * @return          bool - True if the 5-byte type flag is equal
      */
     function sameType(bytes29 left, bytes29 right) internal pure returns (bool) {
-        return (left ^ right) >> (2 * TWELVE_BYTES) == 0;
+        return (left ^ right) >> SHIFT_TO_TYPE == 0;
     }
 
     /**
@@ -370,10 +362,10 @@ library TypedMemView {
      */
     function loc(bytes29 memView) internal pure returns (uint96 _loc) {
         uint256 _mask = LOW_12_MASK;  // assembly can't use globals
+        uint256 _shift = SHIFT_TO_LOC;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
-            // 120 bits = 12 bytes (the encoded loc) + 3 bytes (empty low space)
-            _loc := and(shr(120, memView), _mask)
+            _loc := and(shr(_shift, memView), _mask)
         }
     }
 
@@ -402,9 +394,10 @@ library TypedMemView {
      */
     function len(bytes29 memView) internal pure returns (uint96 _len) {
         uint256 _mask = LOW_12_MASK;  // assembly can't use globals
+        uint256 _emptyBits = 24;
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
-            _len := and(shr(24, memView), _mask)
+            _len := and(shr(_emptyBits, memView), _mask)
         }
     }
 
@@ -694,7 +687,6 @@ library TypedMemView {
             }
 
             // use the identity precompile to copy
-            // guaranteed not to fail, so pop the success
             res := staticcall(gas(), 4, _oldLoc, _len, _newLoc, _len)
         }
         require(res, "identity OOG");
@@ -732,6 +724,7 @@ library TypedMemView {
      *                  As such it MUST be consumed IMMEDIATELY.
      *                  This function is private to prevent unsafe usage by callers.
      * @param memViews  The views
+     * @param _location The location in memory to which to copy & concatenate
      * @return          unsafeView - The conjoined view pointing to the new memory
      */
     function unsafeJoin(bytes29[] memory memViews, uint256 _location) private view returns (bytes29 unsafeView) {
