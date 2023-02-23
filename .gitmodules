@@ -1,0 +1,3 @@
+[submodule "memview-sol/lib/ds-test"]
+	path = memview-sol/lib/ds-test
+	url = https://github.com/dapphub/ds-test
