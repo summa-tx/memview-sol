@@ -198,7 +198,7 @@ library TypedMemView {
         uint256 _end = end(memView);
         assembly {
             // solhint-disable-previous-line no-inline-assembly
-            ret := not(gt(_end, mload(0x40)))
+            ret := iszero(gt(_end, mload(0x40)))
         }
     }
 

@@ -165,4 +165,13 @@ contract TestMemView is DSTest {
         // "Type assertion failed. Got 0x0000000021. Expected 0x000000002c"
         v1.assertType(44);
     }
+
+    function testInvalidMemOverrung() public pure {
+        bytes memory buf = new bytes(0);
+        assembly {
+            mstore(buf, 0xffffffff)
+        }
+        bytes29 inv = TypedMemView.ref(buf, 150);
+        require(!inv.isValid(), "inv ought not be valid");
+    }
 }
