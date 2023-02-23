@@ -199,8 +199,8 @@ library TypedMemView {
         if (typeOf(memView) == 0xffffffffff) {return false;}
         uint256 _end = end(memView);
         assembly {
-            // solium-disable-previous-line security/no-inline-assembly
-            ret := not(gt(_end, mload(0x40)))
+            // solhint-disable-previous-line no-inline-assembly
+            ret := iszero(gt(_end, mload(0x40)))
         }
     }
 

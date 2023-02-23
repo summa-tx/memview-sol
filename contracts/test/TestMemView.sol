@@ -178,4 +178,13 @@ contract TestMemView {
         require(v1.isType(33), "isType should pass");
         v1.assertType(44);
     }
+
+    function testInvalidMemOverrung() public pure {
+        bytes memory buf = new bytes(0);
+        assembly {
+            mstore(buf, 0xffffffff)
+        }
+        bytes29 inv = TypedMemView.ref(buf, 150);
+        require(!inv.isValid(), "inv ought not be valid");
+    }
 }
