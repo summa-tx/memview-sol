@@ -711,7 +711,7 @@ library TypedMemView {
         unsafeCopyTo(memView, ptr + 0x20);
         assembly {
             // solium-disable-previous-line security/no-inline-assembly
-            mstore(0x40, add(add(ptr, _len), 0x20)) // write new unused pointer
+            mstore(0x40, add(add(ptr, add(_len, 31)), 0x20)) // write new unused pointer
             mstore(ptr, _len) // write len of new array (in bytes)
         }
     }
@@ -795,7 +795,7 @@ library TypedMemView {
             // store the legnth
             mstore(ptr, _written)
             // new pointer is old + 0x20 + the footprint of the body
-            mstore(0x40, add(add(ptr, _footprint), 0x20))
+            mstore(0x40, add(add(ptr, add(_footprint, 0x1f)), 0x20))
             ret := ptr
         }
     }
